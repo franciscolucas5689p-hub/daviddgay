@@ -7,7 +7,7 @@ local TweenService = game:GetService("TweenService")
 
 local player = Players.LocalPlayer
 local running = false
-local speed = 80
+local speed = 350
 
 local gui = Instance.new("ScreenGui")
 gui.Name = "DAVI GAYZIN HUB"
