@@ -1,33 +1,45 @@
-
 -- DAVI GAYZIN HUB
--- Voo automatico somente nas aboboras
--- Para seu proprio jogo no Roblox Studio
+-- Voo automático somente nas abóboras
+-- Botão PARAR cancela o voo atual
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 
 local player = Players.LocalPlayer
+
 local running = false
-local speed = 250
+local speed = 350
 local currentTween = nil
 
+-- GUI
 local gui = Instance.new("ScreenGui")
 gui.Name = "DAVI GAYZIN HUB"
 gui.ResetOnSpawn = false
 gui.Parent = player:WaitForChild("PlayerGui")
 
+-- Botão VOAR
 local start = Instance.new("TextButton")
-start.Size = UDim2.fromOffset(200, 45)
-start.Position = UDim2.fromOffset(20, 100)
+start.Name = "VoarButton"
+start.Size = UDim2.new(0, 220, 0, 50)
+start.Position = UDim2.new(0, 20, 0, 100)
+start.BackgroundColor3 = Color3.fromRGB(35, 170, 70)
+start.TextColor3 = Color3.fromRGB(255, 255, 255)
+start.TextScaled = true
 start.Text = "VOAR NAS ABÓBORAS"
 start.Parent = gui
 
+-- Botão PARAR
 local stop = Instance.new("TextButton")
-stop.Size = UDim2.fromOffset(200, 45)
-stop.Position = UDim2.fromOffset(20, 150)
+stop.Name = "PararButton"
+stop.Size = UDim2.new(0, 220, 0, 50)
+stop.Position = UDim2.new(0, 20, 0, 160)
+stop.BackgroundColor3 = Color3.fromRGB(190, 40, 40)
+stop.TextColor3 = Color3.fromRGB(255, 255, 255)
+stop.TextScaled = true
 stop.Text = "PARAR"
 stop.Parent = gui
 
+-- Procurar somente abóboras
 local function findPumpkins()
     local pumpkins = {}
 
@@ -40,6 +52,7 @@ local function findPumpkins()
 
             if obj:IsA("BasePart") then
                 table.insert(pumpkins, obj)
+
             elseif obj:IsA("Model") then
                 local part = obj.PrimaryPart
                     or obj:FindFirstChildWhichIsA("BasePart", true)
@@ -54,8 +67,10 @@ local function findPumpkins()
     return pumpkins
 end
 
+-- Iniciar voo
 start.MouseButton1Click:Connect(function()
     if running then return end
+
     running = true
 
     task.spawn(function()
@@ -64,26 +79,39 @@ start.MouseButton1Click:Connect(function()
             local root = character and character:FindFirstChild("HumanoidRootPart")
 
             if root then
-                for _, pumpkin in ipairs(findPumpkins()) do
+                local pumpkins = findPumpkins()
+
+                for _, pumpkin in ipairs(pumpkins) do
                     if not running then break end
 
                     if pumpkin.Parent then
-                        local destination = pumpkin.Position + Vector3.new(0, 8, 0)
-                        local duration = math.max(
-                            (root.Position - destination).Magnitude / speed,
-                            0.2
-                        )
+                        local destination =
+                            pumpkin.Position + Vector3.new(0, 8, 0)
+
+                        local distance =
+                            (root.Position - destination).Magnitude
+
+                        local duration = math.max(distance / speed, 0.2)
 
                         local tween = TweenService:Create(
                             root,
-                            TweenInfo.new(duration, Enum.EasingStyle.Linear),
-                            {CFrame = CFrame.new(destination)}
+                            TweenInfo.new(
+                                duration,
+                                Enum.EasingStyle.Linear
+                            ),
+                            {
+                                CFrame = CFrame.new(destination)
+                            }
                         )
 
                         currentTween = tween
                         tween:Play()
+
                         tween.Completed:Wait()
-                        currentTween = nil
+
+                        if currentTween == tween then
+                            currentTween = nil
+                        end
                     end
                 end
             end
@@ -93,6 +121,7 @@ start.MouseButton1Click:Connect(function()
     end)
 end)
 
+-- Parar imediatamente
 stop.MouseButton1Click:Connect(function()
     running = false
 
