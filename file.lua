@@ -1,13 +1,15 @@
+
 -- DAVI GAYZIN HUB
--- Voo automático somente nas abóboras
--- Para usar no seu próprio jogo no Roblox Studio
+-- Voo automatico somente nas aboboras
+-- Para seu proprio jogo no Roblox Studio
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 
 local player = Players.LocalPlayer
 local running = false
-local speed = 350
+local speed = 250
+local currentTween = nil
 
 local gui = Instance.new("ScreenGui")
 gui.Name = "DAVI GAYZIN HUB"
@@ -33,13 +35,18 @@ local function findPumpkins()
         local name = string.lower(obj.Name)
 
         if string.find(name, "pumpkin")
-            or string.find(name, "abobora")
-            or string.find(name, "abóbora") then
+        or string.find(name, "abobora")
+        or string.find(name, "abóbora") then
 
             if obj:IsA("BasePart") then
                 table.insert(pumpkins, obj)
-            elseif obj:IsA("Model") and obj.PrimaryPart then
-                table.insert(pumpkins, obj.PrimaryPart)
+            elseif obj:IsA("Model") then
+                local part = obj.PrimaryPart
+                    or obj:FindFirstChildWhichIsA("BasePart", true)
+
+                if part then
+                    table.insert(pumpkins, part)
+                end
             end
         end
     end
@@ -48,28 +55,20 @@ local function findPumpkins()
 end
 
 start.MouseButton1Click:Connect(function()
-    if running then
-        return
-    end
-
+    if running then return end
     running = true
 
     task.spawn(function()
         while running do
             local character = player.Character
-            local root = character
-                and character:FindFirstChild("HumanoidRootPart")
+            local root = character and character:FindFirstChild("HumanoidRootPart")
 
             if root then
                 for _, pumpkin in ipairs(findPumpkins()) do
-                    if not running then
-                        break
-                    end
+                    if not running then break end
 
                     if pumpkin.Parent then
-                        local destination =
-                            pumpkin.Position + Vector3.new(0, 8, 0)
-
+                        local destination = pumpkin.Position + Vector3.new(0, 8, 0)
                         local duration = math.max(
                             (root.Position - destination).Magnitude / speed,
                             0.2
@@ -77,17 +76,14 @@ start.MouseButton1Click:Connect(function()
 
                         local tween = TweenService:Create(
                             root,
-                            TweenInfo.new(
-                                duration,
-                                Enum.EasingStyle.Linear
-                            ),
-                            {
-                                CFrame = CFrame.new(destination)
-                            }
+                            TweenInfo.new(duration, Enum.EasingStyle.Linear),
+                            {CFrame = CFrame.new(destination)}
                         )
 
+                        currentTween = tween
                         tween:Play()
                         tween.Completed:Wait()
+                        currentTween = nil
                     end
                 end
             end
@@ -99,4 +95,9 @@ end)
 
 stop.MouseButton1Click:Connect(function()
     running = false
+
+    if currentTween then
+        currentTween:Cancel()
+        currentTween = nil
+    end
 end)
